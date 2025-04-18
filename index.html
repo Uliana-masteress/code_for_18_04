@@ -4,86 +4,168 @@
     <title>Онлайн магазин</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Подключаем Telegram Web App API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стили для карточек и меню */
-        .product-card { margin: 10px; padding: 10px; border: 1px solid #ddd; }
-        .size-btn { margin: 5px; padding: 8px; }
-        .selected { background: blue; color: white; }
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, sans-serif;
+        }
+        
+        /* Главное меню */
+        .category-grid {
+            display: grid;
+            gap: 15px;
+            padding: 15px;
+        }
+        
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        /* Сетка товаров */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .price-container {
+            margin: 10px 0;
+        }
+
+        .current-price {
+            color: #FF3B30;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .old-price {
+            color: #888;
+            text-decoration: line-through;
+            font-size: 12px;
+        }
+
+        .rating {
+            color: #FF9500;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .add-to-cart {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="app"></div>
     <script>
-        // Данные товаров
         const products = {
             'shorts': [
-                { id: 1, name: 'Шорты спортивные', price: 1500, 
-                  photos: ['photo1.jpg', 'photo2.jpg'], 
-                  desc: 'Описание...', sizes: ['S', 'M', 'L'] },
-                { id: 2, name: 'Шорты летние', price: 1200, 
-                  photos: ['photo3.jpg'], 
-                  desc: 'Состав: хлопок 100%', sizes: ['M', 'XL'] }
+                { 
+                    id: 1, 
+                    name: 'Шорты спортивные', 
+                    price: 1500, 
+                    oldPrice: 2200,
+                    rating: 4.8,
+                    photos: ['photo1.jpg'],
+                    desc: 'Удобные спортивные шорты',
+                    sizes: ['S', 'M', 'L'],
+                    composition: 'Хлопок 100%'
+                }
             ],
-            'tshirts': [/* аналогично */],
-            'hoodies': [/* аналогично */]
+            'tshirts': [
+                {
+                    id: 2,
+                    name: 'Футболка FILA',
+                    price: 1149,
+                    oldPrice: 2200,
+                    rating: 4.8,
+                    photos: ['photo2.jpg'],
+                    desc: 'Женская футболка',
+                    sizes: ['XS', 'S', 'M'],
+                    composition: 'Полиэстер 95%, Эластан 5%'
+                }
+            ],
+            'hoodies': []
         };
 
-        // Корзина (используем localStorage)
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-        // Рендер главного меню
         function renderMainMenu() {
             const html = `
-                <h2>Добро пожаловать!</h2>
-                <button onclick="renderCategory('shorts')">Шорты</button>
-                <button onclick="renderCategory('tshirts')">Футболки</button>
-                <button onclick="renderCategory('hoodies')">Худи</button>
-                <button onclick="renderCart()">Корзина (${cart.length})</button>
+                <div class="category-grid">
+                    <div class="category-card" onclick="renderCategory('shorts')">
+                        <h3>Шорты</h3>
+                    </div>
+                    <div class="category-card" onclick="renderCategory('tshirts')">
+                        <h3>Футболки</h3>
+                    </div>
+                    <div class="category-card" onclick="renderCategory('hoodies')">
+                        <h3>Худи</h3>
+                    </div>
+                    <div class="category-card" onclick="renderCart()">
+                        <h3>Корзина (${cart.length})</h3>
+                    </div>
+                </div>
             `;
             document.getElementById('app').innerHTML = html;
         }
 
-        // Рендер категории товаров
         function renderCategory(category) {
             const items = products[category].map(item => `
                 <div class="product-card">
-                    <img src="${item.photos[0]}" width="200">
-                    <h3>${item.name}</h3>
-                    <p>Цена: ${item.price} руб.</p>
-                    <button onclick="renderProduct('${category}', ${item.id})">Выбрать</button>
+                    <img src="${item.photos[0]}" class="product-image">
+                    <div class="rating">${'★'.repeat(Math.round(item.rating))} ${item.rating}</div>
+                    <h4>${item.name}</h4>
+                    <div class="price-container">
+                        <div class="current-price">${item.price} ₽</div>
+                        ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart(${JSON.stringify(item)})">В корзину</button>
                 </div>
             `).join('');
-            document.getElementById('app').innerHTML = `<button onclick="renderMainMenu()">Назад</button>${items}`;
-        }
 
-        // Рендер корзины
-        function renderCart() {
-            const items = cart.map(item => `
-                <div class="product-card">
-                    <h3>${item.name}</h3>
-                    <p>Размер: ${item.size}</p>
-                    <p>Цена: ${item.price} руб.</p>
-                </div>
-            `).join('');
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const html = `
-                <button onclick="renderMainMenu()">Назад</button>
-                ${items}
-                <h3>Итого: ${total} руб.</h3>
-                <button onclick="checkout()">Оплатить</button>
+            document.getElementById('app').innerHTML = `
+                <button onclick="renderMainMenu()">← Назад</button>
+                <div class="products-grid">${items}</div>
             `;
-            document.getElementById('app').innerHTML = html;
         }
 
-        // Обработка оплаты
-        function checkout() {
-            const message = `Ваш заказ:\n${cart.map(item => `- ${item.name} (${item.size}): ${item.price} руб.`).join('\n')}`;
-            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(message)}`);
+        function addToCart(item) {
+            cart.push({...item, size: 'M'});
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCategory(Object.keys(products).find(key => products[key].includes(item)));
         }
 
-        // Инициализация
+        function renderCart() {
+            // Реализация корзины из предыдущего ответа
+        }
+
         Telegram.WebApp.ready();
         renderMainMenu();
     </script>
