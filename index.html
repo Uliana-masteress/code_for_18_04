@@ -162,6 +162,29 @@
             cursor: pointer;
             color: #007AFF;
         }
+
+        .size-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: collapse;
+        }
+        .size-table td, .size-table th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .color-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .product-details-section {
+            margin: 15px 0;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -170,14 +193,15 @@
         const products = {
             'shorts': [
                 { 
-                    id: 1, 
-                    name: 'Шорты спортивные', 
-                    price: 1500, 
-                    oldPrice: 2200,
-                    photos: ['https://via.placeholder.com/300x400'],
-                    desc: 'Удобные спортивные шорты для активного отдыха',
-                    sizes: ['S', 'M', 'L'],
-                    composition: 'Хлопок 100%'
+                    id: 1,
+                    name: 'Мужские шорты AWSM',
+                    price: 2499,
+                    oldPrice: 3999,
+                    photos: ['https://basket-21.wbbasket.ru/vol3670/part367026/367026012/images/c246x328/1.webp'],
+                    desc: 'Удобные, стильные мужские черные трикотажные шорты идеально подойдут для активного ношения в повседневной жизни. Идеальное качество это правило нашего бренда! Модель бермуды бренда AWSM выполнена из приятной телу ткани.',
+                    sizes: ['S', 'M', 'L', 'XL'],
+                    composition: '100% хлопок',
+                    color: 'Черный'
                 }
             ],
             'tshirts': [
@@ -185,22 +209,24 @@
                     id: 2,
                     name: 'Футболка FILA',
                     price: 1149,
-                    oldPrice: 2200,
-                    photos: ['https://via.placeholder.com/300x400'],
+                    oldPrice: 2299,
+                    photos: ['https://basket-16.wbbasket.ru/vol2424/part242457/242457132/images/c246x328/1.webp'],
                     desc: 'Женская футболка премиум-класса',
                     sizes: ['XS', 'S', 'M'],
-                    composition: 'Полиэстер 95%, Эластан 5%'
+                    composition: 'Полиэстер 95%, Эластан 5%',
+                    color: 'Белый'
                 }
             ],
             'hoodies': [
                 {
                     id: 3,
                     name: 'Худи Oversize',
-                    price: 2999,
-                    photos: ['https://via.placeholder.com/300x400'],
+                    price: 5999,
+                    photos: ['https://basket-20.wbbasket.ru/vol3425/part342585/342585984/images/c246x328/1.webp'],
                     desc: 'Модное худи свободного кроя',
                     sizes: ['M', 'L', 'XL'],
-                    composition: 'Хлопок 80%, Полиэстер 20%'
+                    composition: 'Хлопок 80%, Полиэстер 20%',
+                    color: 'Серый'
                 }
             ]
         };
@@ -232,35 +258,58 @@
             document.getElementById('app').innerHTML = html;
         }
 
-
         function renderCart() {
             const items = cart.map(item => `
                 <div class="cart-item">
-                    <h4>${item.name} (${item.size})</h4>
+                    <h3>${item.name}</h3>
+                    <p>Цвет: ${item.color}</p>
+                    <p>Размер: ${item.size}</p>
                     <div class="price-container">
                         <div class="current-price">${item.price} ₽</div>
+                        ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
                     </div>
+                    <hr>
                 </div>
             `).join('');
-        
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            
             const html = `
                 <div class="header">
                     <div class="user-info">
-                        <div>Привет, Ульяна<br><small>Москва</small></div>
-                        <button>Q</button>
+                        <div>Корзина</div>
                     </div>
                 </div>
                 <button class="back-button" onclick="goBack()">← Назад</button>
-                <div class="cart-grid">${items}</div>
-                <button class="pay-button" onclick="pay()">Оплатить</button>
+                ${items}
+                <div class="total-section">
+                    <h3>Итого: ${total} ₽</h3>
+                    <button class="checkout-btn" onclick="checkout()">Продолжить оформление</button>
+                </div>
             `;
-        
             document.getElementById('app').innerHTML = html;
         }
         
         function pay() {
             const order = cart.map(item => `${item.name} (${item.size}) - ${item.price} ₽`).join('\n');
             Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(order)}`);
+        }
+
+        function checkout() {
+            const message = `Заказ:\n${cart.map(item => 
+                `${item.name} (${item.size}) - ${item.price} ₽`
+            ).join('\n')}\n\nИтого: ${cart.reduce((sum, item) => sum + item.price, 0)} ₽`;
+            
+            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(message)}`);
+        }
+
+        function getColorCode(color) {
+            const colors = {
+                'Черный': '#000000',
+                'Белый': '#ffffff',
+                'Серый': '#808080'
+            };
+            return colors[color] || '#cccccc';
         }
 
 
@@ -328,37 +377,45 @@
 
         function showProduct(product) {
             selectedProduct = product;
-            selectedSize = null;
             const html = `
                 <div class="product-modal">
                     <div class="modal-content">
-                        <button onclick="closeModal()" style="float: right; background: none; border: none; font-size: 24px">×</button>
+                        <button onclick="closeModal()" style="float: right">×</button>
                         <img src="${product.photos[0]}" class="product-image">
                         <h2>${product.name}</h2>
+                        
                         <div class="price-container">
                             <div class="current-price">${product.price} ₽</div>
                             ${product.oldPrice ? `<div class="old-price">${product.oldPrice} ₽</div>` : ''}
                         </div>
-                        
-                        <h3>Описание</h3>
-                        <p>${product.desc}</p>
-                        
-                        <h3>Состав</h3>
-                        <p>${product.composition}</p>
-                        
-                        <h3>Размеры</h3>
-                        <div class="size-selector">
-                            ${product.sizes.map(size => `
-                                <button class="size-btn ${selectedSize === size ? 'selected' : ''}" 
-                                        onclick="selectSize('${size}')">${size}</button>
-                            `).join('')}
+
+                        <div class="product-details-section">
+                            <div><span class="color-indicator" style="background: ${getColorCode(product.color)}"></span>${product.color}</div>
                         </div>
-                        
-                        <button class="add-to-cart" 
-                                onclick="addToCart()" 
-                                style="width: 100%; margin-top: 20px; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 10px; font-size: 16px">
-                            В корзину
-                        </button>
+
+                        <div class="product-details-section">
+                            <h3>Размеры</h3>
+                            <table class="size-table">
+                                <tr>
+                                    ${product.sizes.map(size => `<th>${size}</th>`).join('')}
+                                </tr>
+                                <tr>
+                                    ${product.sizes.map(() => `<td><button class="size-btn" onclick="selectSize('${size}')">${size}</button></td>`).join('')}
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="product-details-section">
+                            <h3>Описание</h3>
+                            <p>${product.desc}</p>
+                        </div>
+
+                        <div class="product-details-section">
+                            <h3>Состав</h3>
+                            <p>${product.composition}</p>
+                        </div>
+
+                        <button class="add-to-cart" onclick="addToCart()">В корзину</button>
                     </div>
                 </div>
             `;
