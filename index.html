@@ -80,7 +80,7 @@
         // Обработка оплаты
         function checkout() {
             const message = `Ваш заказ:\n${cart.map(item => `- ${item.name} (${item.size}): ${item.price} руб.`).join('\n')}`;
-            Telegram.WebApp.openTelegramLink(`https://t.me/your_bot_username?start=${encodeURIComponent(message)}`);
+            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(message)}`);
         }
 
         // Инициализация
