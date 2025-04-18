@@ -232,6 +232,38 @@
             document.getElementById('app').innerHTML = html;
         }
 
+
+        function renderCart() {
+            const items = cart.map(item => `
+                <div class="cart-item">
+                    <h4>${item.name} (${item.size})</h4>
+                    <div class="price-container">
+                        <div class="current-price">${item.price} ₽</div>
+                    </div>
+                </div>
+            `).join('');
+        
+            const html = `
+                <div class="header">
+                    <div class="user-info">
+                        <div>Привет, Ульяна<br><small>Москва</small></div>
+                        <button>Q</button>
+                    </div>
+                </div>
+                <button class="back-button" onclick="goBack()">← Назад</button>
+                <div class="cart-grid">${items}</div>
+                <button class="pay-button" onclick="pay()">Оплатить</button>
+            `;
+        
+            document.getElementById('app').innerHTML = html;
+        }
+        
+        function pay() {
+            const order = cart.map(item => `${item.name} (${item.size}) - ${item.price} ₽`).join('\n');
+            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(order)}`);
+        }
+
+
         function renderCategories() {
             return `
                 <div class="category-grid">
@@ -349,7 +381,7 @@
             });
             localStorage.setItem('cart', JSON.stringify(cart));
             closeModal();
-            renderMain();
+            renderCart(); 
         }
 
         function closeModal() {
