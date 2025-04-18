@@ -9,29 +9,69 @@
         * {
             box-sizing: border-box;
             font-family: -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        
-        /* Главное меню */
+
+        /* Шапка */
+        .header {
+            padding: 15px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid #007AFF;
+            color: #007AFF;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: #007AFF;
+            color: white;
+        }
+
+        /* Сетка категорий */
         .category-grid {
             display: grid;
             gap: 15px;
             padding: 15px;
+            grid-template-columns: repeat(2, 1fr);
         }
-        
+
         .category-card {
-            background: white;
+            background: linear-gradient(135deg, #007AFF, #34C759);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: white;
             text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         /* Сетка товаров */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+        .products-list {
             padding: 15px;
+            display: grid;
+            gap: 15px;
         }
 
         .product-card {
@@ -39,6 +79,7 @@
             border-radius: 12px;
             padding: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
 
         .product-image {
@@ -46,6 +87,7 @@
             height: 180px;
             object-fit: cover;
             border-radius: 8px;
+            margin-bottom: 10px;
         }
 
         .price-container {
@@ -64,20 +106,41 @@
             font-size: 12px;
         }
 
-        .rating {
-            color: #FF9500;
-            font-size: 14px;
-            margin: 5px 0;
+        /* Модальное окно товара */
+        .product-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        .add-to-cart {
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .size-selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .size-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+        }
+
+        .size-btn.selected {
             background: #007AFF;
             color: white;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            border-radius: 8px;
-            font-weight: bold;
+            border-color: #007AFF;
         }
     </style>
 </head>
@@ -91,7 +154,6 @@
                     name: 'Шорты спортивные', 
                     price: 1500, 
                     oldPrice: 2200,
-                    rating: 4.8,
                     photos: ['photo1.jpg'],
                     desc: 'Удобные спортивные шорты',
                     sizes: ['S', 'M', 'L'],
@@ -104,7 +166,6 @@
                     name: 'Футболка FILA',
                     price: 1149,
                     oldPrice: 2200,
-                    rating: 4.8,
                     photos: ['photo2.jpg'],
                     desc: 'Женская футболка',
                     sizes: ['XS', 'S', 'M'],
@@ -115,9 +176,33 @@
         };
 
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentTab = 'categories';
+        let selectedProduct = null;
+        let selectedSize = null;
 
-        function renderMainMenu() {
+        function renderMain() {
             const html = `
+                <div class="header">
+                    <div class="user-info">
+                        <div>Привет, Ульяна<br><small>Москва</small></div>
+                        <button>Q</button>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab ${currentTab === 'categories' ? 'active' : ''}" 
+                             onclick="switchTab('categories')">Разделы</div>
+                        <div class="tab ${currentTab === 'catalog' ? 'active' : ''}" 
+                             onclick="switchTab('catalog')">Каталог</div>
+                    </div>
+                </div>
+                
+                ${currentTab === 'categories' ? renderCategories() : renderCatalog()}
+            `;
+            document.getElementById('app').innerHTML = html;
+        }
+
+        function renderCategories() {
+            return `
                 <div class="category-grid">
                     <div class="category-card" onclick="renderCategory('shorts')">
                         <h3>Шорты</h3>
@@ -128,46 +213,96 @@
                     <div class="category-card" onclick="renderCategory('hoodies')">
                         <h3>Худи</h3>
                     </div>
-                    <div class="category-card" onclick="renderCart()">
-                        <h3>Корзина (${cart.length})</h3>
-                    </div>
                 </div>
             `;
-            document.getElementById('app').innerHTML = html;
         }
 
-        function renderCategory(category) {
-            const items = products[category].map(item => `
-                <div class="product-card">
+        function renderCatalog() {
+            const allProducts = Object.values(products).flat();
+            const items = allProducts.map(item => `
+                <div class="product-card" onclick="showProduct(${JSON.stringify(item)})">
                     <img src="${item.photos[0]}" class="product-image">
-                    <div class="rating">${'★'.repeat(Math.round(item.rating))} ${item.rating}</div>
                     <h4>${item.name}</h4>
                     <div class="price-container">
                         <div class="current-price">${item.price} ₽</div>
                         ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
                     </div>
-                    <button class="add-to-cart" onclick="addToCart(${JSON.stringify(item)})">В корзину</button>
                 </div>
             `).join('');
 
-            document.getElementById('app').innerHTML = `
-                <button onclick="renderMainMenu()">← Назад</button>
-                <div class="products-grid">${items}</div>
+            return `<div class="products-list">${items}</div>`;
+        }
+
+        function showProduct(product) {
+            selectedProduct = product;
+            const html = `
+                <div class="product-modal">
+                    <div class="modal-content">
+                        <button onclick="closeModal()" style="float: right">×</button>
+                        <img src="${product.photos[0]}" class="product-image">
+                        <h2>${product.name}</h2>
+                        <div class="price-container">
+                            <div class="current-price">${product.price} ₽</div>
+                            ${product.oldPrice ? `<div class="old-price">${product.oldPrice} ₽</div>` : ''}
+                        </div>
+                        
+                        <h3>Описание</h3>
+                        <p>${product.desc}</p>
+                        
+                        <h3>Состав</h3>
+                        <p>${product.composition}</p>
+                        
+                        <h3>Размеры</h3>
+                        <div class="size-selector">
+                            ${product.sizes.map(size => `
+                                <button class="size-btn ${selectedSize === size ? 'selected' : ''}" 
+                                        onclick="selectSize('${size}')">${size}</button>
+                            `).join('')}
+                        </div>
+                        
+                        <button class="add-to-cart" 
+                                onclick="addToCart()" 
+                                style="width: 100%; margin-top: 20px">
+                            В корзину
+                        </button>
+                    </div>
+                </div>
             `;
+            document.body.insertAdjacentHTML('beforeend', html);
         }
 
-        function addToCart(item) {
-            cart.push({...item, size: 'M'});
+        function selectSize(size) {
+            selectedSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent === size);
+            });
+        }
+
+        function addToCart() {
+            if (!selectedSize) return alert('Выберите размер!');
+            cart.push({
+                ...selectedProduct,
+                size: selectedSize,
+                quantity: 1
+            });
             localStorage.setItem('cart', JSON.stringify(cart));
-            renderCategory(Object.keys(products).find(key => products[key].includes(item)));
+            closeModal();
+            renderMain();
         }
 
-        function renderCart() {
-            // Реализация корзины из предыдущего ответа
+        function closeModal() {
+            document.querySelector('.product-modal').remove();
+            selectedProduct = null;
+            selectedSize = null;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            renderMain();
         }
 
         Telegram.WebApp.ready();
-        renderMainMenu();
+        renderMain();
     </script>
 </body>
 </html>
