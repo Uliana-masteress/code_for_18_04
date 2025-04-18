@@ -13,32 +13,40 @@
             padding: 0;
         }
 
-        /* Шапка */
+        body {
+            background: #f8f8f8;
+        }
+
         .header {
             padding: 15px;
-            background: #f8f8f8;
+            background: white;
             border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .user-info {
             display: flex;
             justify-content: space-between;
             margin-bottom: 15px;
+            font-size: 16px;
         }
 
         .tabs {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             margin-bottom: 15px;
         }
 
         .tab {
-            padding: 8px 15px;
+            padding: 8px 20px;
             border-radius: 20px;
             background: #fff;
             border: 1px solid #007AFF;
             color: #007AFF;
             cursor: pointer;
+            font-size: 14px;
         }
 
         .tab.active {
@@ -46,7 +54,6 @@
             color: white;
         }
 
-        /* Сетка категорий */
         .category-grid {
             display: grid;
             gap: 15px;
@@ -65,12 +72,13 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
 
-        /* Сетка товаров */
-        .products-list {
+        .products-grid {
             padding: 15px;
             display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
         }
 
@@ -106,7 +114,6 @@
             font-size: 12px;
         }
 
-        /* Модальное окно товара */
         .product-modal {
             position: fixed;
             top: 0;
@@ -116,18 +123,21 @@
             background: rgba(0,0,0,0.5);
             padding: 20px;
             overflow-y: auto;
+            z-index: 1000;
         }
 
         .modal-content {
             background: white;
             border-radius: 12px;
             padding: 20px;
+            position: relative;
         }
 
         .size-selector {
             display: flex;
             gap: 10px;
             margin: 15px 0;
+            flex-wrap: wrap;
         }
 
         .size-btn {
@@ -135,12 +145,22 @@
             border: 1px solid #ddd;
             border-radius: 20px;
             background: white;
+            cursor: pointer;
         }
 
         .size-btn.selected {
             background: #007AFF;
             color: white;
             border-color: #007AFF;
+        }
+
+        .back-button {
+            padding: 10px;
+            margin: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #007AFF;
         }
     </style>
 </head>
@@ -154,8 +174,8 @@
                     name: 'Шорты спортивные', 
                     price: 1500, 
                     oldPrice: 2200,
-                    photos: ['photo1.jpg'],
-                    desc: 'Удобные спортивные шорты',
+                    photos: ['https://via.placeholder.com/300x400'],
+                    desc: 'Удобные спортивные шорты для активного отдыха',
                     sizes: ['S', 'M', 'L'],
                     composition: 'Хлопок 100%'
                 }
@@ -166,16 +186,27 @@
                     name: 'Футболка FILA',
                     price: 1149,
                     oldPrice: 2200,
-                    photos: ['photo2.jpg'],
-                    desc: 'Женская футболка',
+                    photos: ['https://via.placeholder.com/300x400'],
+                    desc: 'Женская футболка премиум-класса',
                     sizes: ['XS', 'S', 'M'],
                     composition: 'Полиэстер 95%, Эластан 5%'
                 }
             ],
-            'hoodies': []
+            'hoodies': [
+                {
+                    id: 3,
+                    name: 'Худи Oversize',
+                    price: 2999,
+                    photos: ['https://via.placeholder.com/300x400'],
+                    desc: 'Модное худи свободного кроя',
+                    sizes: ['M', 'L', 'XL'],
+                    composition: 'Хлопок 80%, Полиэстер 20%'
+                }
+            ]
         };
 
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentView = 'main';
         let currentTab = 'categories';
         let selectedProduct = null;
         let selectedSize = null;
@@ -204,20 +235,21 @@
         function renderCategories() {
             return `
                 <div class="category-grid">
-                    <div class="category-card" onclick="renderCategory('shorts')">
+                    <div class="category-card" onclick="showCategory('shorts')">
                         <h3>Шорты</h3>
                     </div>
-                    <div class="category-card" onclick="renderCategory('tshirts')">
+                    <div class="category-card" onclick="showCategory('tshirts')">
                         <h3>Футболки</h3>
                     </div>
-                    <div class="category-card" onclick="renderCategory('hoodies')">
+                    <div class="category-card" onclick="showCategory('hoodies')">
                         <h3>Худи</h3>
                     </div>
                 </div>
             `;
         }
 
-        function renderCategory(category) {
+        function showCategory(category) {
+            currentView = 'category';
             const items = products[category].map(item => `
                 <div class="product-card" onclick="showProduct(${JSON.stringify(item)})">
                     <img src="${item.photos[0]}" class="product-image">
@@ -228,13 +260,16 @@
                     </div>
                 </div>
             `).join('');
-        
+
             const html = `
                 <div class="header">
-                    ${/* Шапка остается без изменений */}
+                    <div class="user-info">
+                        <div>Привет, Ульяна<br><small>Москва</small></div>
+                        <button>Q</button>
+                    </div>
                 </div>
-                <button onclick="switchTab('categories')" style="margin: 15px">← Назад</button>
-                <div class="products-list">${items}</div>
+                <button class="back-button" onclick="goBack()">← Назад</button>
+                <div class="products-grid">${items}</div>
             `;
             
             document.getElementById('app').innerHTML = html;
@@ -253,15 +288,19 @@
                 </div>
             `).join('');
 
-            return `<div class="products-list">${items}</div>`;
+            return `
+                <button class="back-button" onclick="goBack()">← Назад</button>
+                <div class="products-grid">${items}</div>
+            `;
         }
 
         function showProduct(product) {
             selectedProduct = product;
+            selectedSize = null;
             const html = `
                 <div class="product-modal">
                     <div class="modal-content">
-                        <button onclick="closeModal()" style="float: right">×</button>
+                        <button onclick="closeModal()" style="float: right; background: none; border: none; font-size: 24px">×</button>
                         <img src="${product.photos[0]}" class="product-image">
                         <h2>${product.name}</h2>
                         <div class="price-container">
@@ -285,7 +324,7 @@
                         
                         <button class="add-to-cart" 
                                 onclick="addToCart()" 
-                                style="width: 100%; margin-top: 20px">
+                                style="width: 100%; margin-top: 20px; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 10px; font-size: 16px">
                             В корзину
                         </button>
                     </div>
@@ -314,7 +353,8 @@
         }
 
         function closeModal() {
-            document.querySelector('.product-modal').remove();
+            const modal = document.querySelector('.product-modal');
+            if (modal) modal.remove();
             selectedProduct = null;
             selectedSize = null;
         }
@@ -324,6 +364,12 @@
             renderMain();
         }
 
+        function goBack() {
+            currentView = 'main';
+            renderMain();
+        }
+
+        // Инициализация приложения
         Telegram.WebApp.ready();
         renderMain();
     </script>
