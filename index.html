@@ -217,6 +217,29 @@
             `;
         }
 
+        function renderCategory(category) {
+            const items = products[category].map(item => `
+                <div class="product-card" onclick="showProduct(${JSON.stringify(item)})">
+                    <img src="${item.photos[0]}" class="product-image">
+                    <h4>${item.name}</h4>
+                    <div class="price-container">
+                        <div class="current-price">${item.price} ₽</div>
+                        ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        
+            const html = `
+                <div class="header">
+                    ${/* Шапка остается без изменений */}
+                </div>
+                <button onclick="switchTab('categories')" style="margin: 15px">← Назад</button>
+                <div class="products-list">${items}</div>
+            `;
+            
+            document.getElementById('app').innerHTML = html;
+        }
+
         function renderCatalog() {
             const allProducts = Object.values(products).flat();
             const items = allProducts.map(item => `
