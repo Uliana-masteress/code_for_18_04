@@ -107,7 +107,7 @@
         }
 
         .category-card {
-            background:  linear-gradient(135deg, #007AFF, #34C759);
+            background:  linear-gradient(135deg, #007AFF, #007AFF);
             border-radius: 12px;
             padding: 20px;
             color: white;
@@ -335,6 +335,7 @@
         };
 
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentTab = 'categories';
         let currentView = 'main';
         let selectedProduct = null;
         let selectedSize = null;
@@ -432,15 +433,18 @@
         }
 
         function showCategory(category) {
+            currentView = 'category';
             const items = products[category].map(item => `
                 <div class="product-card" 
                      data-product='${JSON.stringify(item)}'
                      onclick="handleProductClick(event)">
-                    <img src="${item.photos[0]}" class="product-image">
-                    <h4>${item.name}</h4>
-                    <div class="price-container">
-                        <div class="current-price">${item.price} ₽</div>
-                        ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
+                    <div class="product-content">
+                        <img src="${item.photos[0]}" class="product-image">
+                        <h4>${item.name}</h4>
+                        <div class="price-container">
+                            <div class="current-price">${item.price} ₽</div>
+                            ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
+                        </div>
                     </div>
                     <button class="add-to-cart" 
                             onclick="event.stopPropagation(); handleProductClick(event)">
@@ -449,13 +453,22 @@
                 </div>
             `).join('');
 
-            document.getElementById('app').innerHTML = `
-                <div class="header">...</div>
+            const html = `
+                <div class="header">
+                    <div class="user-info">
+                        <div>Привет, Ульяна<br><small>Москва</small></div>
+                        <button>Q</button>
+                    </div>
+                </div>
+                <button class="back-button" onclick="goBack()">← Назад</button>
                 <div class="products-grid">${items}</div>
             `;
+            
+            document.getElementById('app').innerHTML = html;
         }
+
         function handleProductClick(event) {
-            const card = event.currentTarget;
+            const card = event.currentTarget.closest('.product-card');
             const productData = JSON.parse(card.dataset.product);
             showProduct(productData);
         }
