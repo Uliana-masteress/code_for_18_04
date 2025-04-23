@@ -32,6 +32,51 @@
             margin-bottom: 15px;
             font-size: 16px;
         }
+        .product-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .back-button {
+            padding: 10px 15px;
+            margin: 15px;
+            border: none;
+            background: #007AFF;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .add-to-cart-btn {
+            background: #34C759;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
 
         .tabs {
             display: flex;
@@ -62,7 +107,7 @@
         }
 
         .category-card {
-            background: linear-gradient(135deg, #f0e600, #f0e600);
+            background:  linear-gradient(135deg, #007AFF, #34C759);
             border-radius: 12px;
             padding: 20px;
             color: white;
@@ -291,7 +336,6 @@
 
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let currentView = 'main';
-        let currentTab = 'categories';
         let selectedProduct = null;
         let selectedSize = null;
 
@@ -310,7 +354,7 @@
                              onclick="switchTab('catalog')">Каталог</div>
                     </div>
                 </div>
-                
+                <button class="back-button" onclick="goBack()">← Назад</button>
                 ${currentTab === 'categories' ? renderCategories() : renderCatalog()}
             `;
             document.getElementById('app').innerHTML = html;
@@ -320,11 +364,9 @@
             const items = cart.map(item => `
                 <div class="cart-item">
                     <h3>${item.name}</h3>
-                    <p>Цвет: ${item.color}</p>
                     <p>Размер: ${item.size}</p>
                     <div class="price-container">
                         <div class="current-price">${item.price} ₽</div>
-                        ${item.oldPrice ? `<div class="old-price">${item.oldPrice} ₽</div>` : ''}
                     </div>
                     <hr>
                 </div>
@@ -342,7 +384,9 @@
                 ${items}
                 <div class="total-section">
                     <h3>Итого: ${total} ₽</h3>
-                    <button class="checkout-btn" onclick="checkout()">Продолжить оформление</button>
+                    <button class="checkout-btn" onclick="checkout()">
+                        Продолжить оформление
+                    </button>
                 </div>
             `;
             document.getElementById('app').innerHTML = html;
@@ -444,20 +488,38 @@
         }
 
         function showProduct(product) {
-            const modalHTML = `
+            selectedProduct = product;
+            const html = `
                 <div class="product-modal">
                     <div class="modal-content">
                         <h2>${product.name}</h2>
-                        <img src="${product.photos[0]}" style="width:100%">
+                        <img src="${product.photos[0]}" class="product-image">
+                        
+                        <div class="price-container">
+                            <div class="current-price">${product.price} ₽</div>
+                            ${product.oldPrice ? `<div class="old-price">${product.oldPrice} ₽</div>` : ''}
+                        </div>
+
+                        <div class="size-selector">
+                            ${product.sizes.map(size => `
+                                <button class="size-btn ${selectedSize === size ? 'selected' : ''}" 
+                                        onclick="selectSize('${size}')">${size}</button>
+                            `).join('')}
+                        </div>
+
+                        <h3>Описание</h3>
                         <p>${product.desc}</p>
-                        <button onclick="this.closest('.product-modal').remove()">
-                            Закрыть
+
+                        <h3>Состав</h3>
+                        <p>${product.composition}</p>
+
+                        <button class="add-to-cart-btn" onclick="addToCart()">
+                            Добавить в корзину
                         </button>
                     </div>
                 </div>
             `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.body.insertAdjacentHTML('beforeend', html);
         }
 
         function selectSize(size) {
@@ -469,14 +531,17 @@
 
         function addToCart() {
             if (!selectedSize) return alert('Выберите размер!');
+            
             cart.push({
                 ...selectedProduct,
                 size: selectedSize,
                 quantity: 1
             });
+            
             localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Товар добавлен в корзину!');
             closeModal();
-            renderCart(); 
+            renderCart();
         }
 
         function closeModal() {
