@@ -375,12 +375,13 @@
             `;
         }
 
-        function showProduct(product) {
+       function showProduct(product) {
             selectedProduct = product;
+            selectedSize = null;
             const html = `
                 <div class="product-modal">
                     <div class="modal-content">
-                        <button onclick="closeModal()" style="float: right">×</button>
+                        <button onclick="closeModal()" style="float: right; background: none; border: none; font-size: 24px">×</button>
                         <img src="${product.photos[0]}" class="product-image">
                         <h2>${product.name}</h2>
                         
@@ -395,14 +396,12 @@
 
                         <div class="product-details-section">
                             <h3>Размеры</h3>
-                            <table class="size-table">
-                                <tr>
-                                    ${product.sizes.map(size => `<th>${size}</th>`).join('')}
-                                </tr>
-                                <tr>
-                                    ${product.sizes.map(() => `<td><button class="size-btn" onclick="selectSize('${size}')">${size}</button></td>`).join('')}
-                                </tr>
-                            </table>
+                            <div class="size-selector">
+                                ${product.sizes.map(size => `
+                                    <button class="size-btn" 
+                                            onclick="selectSize('${size}')">${size}</button>
+                                `).join('')}
+                            </div>
                         </div>
 
                         <div class="product-details-section">
@@ -415,7 +414,11 @@
                             <p>${product.composition}</p>
                         </div>
 
-                        <button class="add-to-cart" onclick="addToCart()">В корзину</button>
+                        <button class="add-to-cart" 
+                                onclick="addToCart()" 
+                                style="width: 100%; margin-top: 20px; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 10px; font-size: 16px">
+                            В корзину
+                        </button>
                     </div>
                 </div>
             `;
