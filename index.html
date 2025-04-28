@@ -107,7 +107,7 @@
         }
 
         .category-card {
-            background:  linear-gradient(135deg, #cc8886, #cc8886);
+            background:  linear-gradient(135deg, #8886cc, #cc8886);
             border-radius: 12px;
             padding: 20px;
             color: white;
@@ -362,13 +362,14 @@
         }
 
         function renderCart() {
-            const items = cart.map(item => `
+            const items = cart.map((item, index) => `
                 <div class="cart-item">
                     <h3>${item.name}</h3>
                     <p>Размер: ${item.size}</p>
                     <div class="price-container">
                         <div class="current-price">${item.price} ₽</div>
                     </div>
+                    <button onclick="removeFromCart(${index})">❌ Удалить</button>
                     <hr>
                 </div>
             `).join('');
@@ -398,14 +399,23 @@
             Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(order)}`);
         }
 
-
-        function checkout() {
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const message = `Заказ: ${cart.length} товаров на сумму ${total} ₽`;
-            
-            const encodedMessage = encodeURIComponent(message);
-            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodedMessage}`);
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
         }
+        function checkout() {
+            const orderData = {
+                count: cart.length,
+                total: cart.reduce((sum, item) => sum + item.price, 0),
+                items: cart.map(item => `${item.id}:${item.size}`)
+            };
+            
+            const encodedOrder = encodeURIComponent(JSON.stringify(orderData));
+            Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodedOrder}`);
+        }        
+
+
         function getColorCode(color) {
             const colors = {
                 'Черный': '#000000',
