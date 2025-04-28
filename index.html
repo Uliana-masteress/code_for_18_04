@@ -107,7 +107,7 @@
         }
 
         .category-card {
-            background:  linear-gradient(135deg, #8886cc, #007AFF);
+            background:  linear-gradient(135deg, #cc8886, #007AFF);
             border-radius: 12px;
             padding: 20px;
             color: white;
@@ -398,18 +398,14 @@
             Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodeURIComponent(order)}`);
         }
 
+
         function checkout() {
-            const orderDetails = cart.map(item => 
-                `▶️ ${item.name}\n├ Размер: ${item.size}\n└ Цена: ${item.price} ₽`
-            ).join('\n\n');
-            
             const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const message = `🛍️ *Заказ*\n\n${orderDetails}\n\n💵 *Итого: ${total} ₽*`;
+            const message = `Заказ: ${cart.length} товаров на сумму ${total} ₽`;
             
             const encodedMessage = encodeURIComponent(message);
             Telegram.WebApp.openTelegramLink(`https://t.me/code_18_04_bot?start=${encodedMessage}`);
         }
-
         function getColorCode(color) {
             const colors = {
                 'Черный': '#000000',
